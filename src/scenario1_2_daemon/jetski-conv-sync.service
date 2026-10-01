@@ -1,0 +1,12 @@
+[Unit]
+Description=Jetski Hub (Web) & Jetski App (SSH) Project/Workspace & Conversation Sync Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.gemini/jetski/bin/jetski_conv_sync_daemon.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,16 @@
+# Secrets, certificates, and runtime state (NEVER commit!)
+*.pem
+*.key
+*.crt
+*.db
+*.db-shm
+*.db-wal
+*.pb
+*.log
+*.pid
+
+# Compiled binaries and build artifacts
+jetski_hub_bridge
+__pycache__/
+*.py[cod]
+.DS_Store
