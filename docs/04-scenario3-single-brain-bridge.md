@@ -63,28 +63,30 @@ CREATE TABLE `steps` (
 
 我们在 [`src/scenario3_bridge/jetski_hub_bridge.go`](../src/scenario3_bridge/jetski_hub_bridge.go) 中实现了一个轻量级 Go HTTP/2 TLS 透明反向代理，并配合 `extension.js` 原生内置的 **`antigravity.persistentLanguageServer`** 机制完成无缝接管：
 
-1. **利用 `extension.js` 原生热发现机制 (`module 17689 & 32266`)**：
-   - `extension.js` 每 1 秒运行一次 `maybeUpdate()` 检查配置项 `antigravity.persistentLanguageServer`；
+1. **利用 `extension.js` 原生热发现机制 (`module 17689 & 32266`) 与 `jetski_ls_shim.py` 轻量级 Shim**：
+   - `extension.js` 每 1 秒运行一次 `maybeUpdate()` 检查配置项 `antigravity.persistentLanguageServer`、`codeiumDev.languageServerBinaryPath` 与 `codeiumDev.languageServerEnv`；
    - 当开启该选项时，`extension.js` 的 `discoverExistingLS()` 会读取 `~/.gemini/jetski/daemon/ls_<sha256(workspaceId)[:16]>.json`：
      ```json
      {
        "pid": 12345,
        "httpsPort": 37999,
        "httpPort": 37998,
-       "lspPort": 40689,
+       "lspPort": 37997,
        "csrfToken": "<bridge-or-hub-token>",
-       "lsVersion": "<ide-version>"
+       "lsVersion": "<bin-dir-version-prefix>"
      }
      ```
-   - 校验通过后，`extension.js` 无需重启窗口即可自动调用 `vscode.antigravityLanguageServer.setPort(37999)` 将本地 Electron 客户端切换到桥接端口，并发送 `ReconnectExtensionServer`。
+   - **关键细节 (`lsVersion` 匹配)**：`extension.js` 的 `getExpectedLSVersion()` 校验的是 `~/.jetski-server/bin/<version>-<commit>` 目录名中 `-` 之前的版本号（如 `2.0.20260807053640`），而非 `package.json` 中的 `0.2.0`；`enable_unified_bridge.py` 自动提取该版本号写入 discovery 文件；
+   - **零重启热切换 (`jetski_ls_shim.py`)**：通过将 `codeiumDev.languageServerBinaryPath` 指向 [`src/scenario3_bridge/jetski_ls_shim.py`](../src/scenario3_bridge/jetski_ls_shim.py) 并更新 `BRIDGE_EPOCH` 环境变量，`extension.js` 的 1 秒轮询循环会立即终止旧的独立 `language_server_linux_x64` 进程，并通过 `discoverExistingLS()` 或 Shim 的 `LanguageServerStarted` Protobuf 握手在 1 秒内无感挂载到 `jetski_hub_bridge` (`:37999`)，**全程无需 Reload Window**。
 2. **动态提取本机 TLS 证书与私钥（零硬编码密钥）**：
    - 安装时由 [`extract_local_cert.py`](../src/scenario3_bridge/extract_local_cert.py) 从用户本机的 `$HOME/.jetski-server/bin/.../language_server_linux_x64` 提取内嵌私钥与 `cert.pem` 到本地运行目录（被 `.gitignore` 严格忽略），使 `jetski_hub_bridge` (`:37999`) 100% 通过 Electron 客户端与 `extension.js` 的 TLS 证书校验。
 3. **HTTP/2 零延迟流式代理 (`FlushInterval: -1`) 与 CSRF 自动重写**：
-   - `jetski_hub_bridge` 自动发现当前运行的 `jetski-hub-server` HTTPS 端口与 CSRF Token；
+   - `jetski_hub_bridge` 作为 `systemd --user` 常驻服务（[`jetski-hub-bridge.service`](../src/scenario3_bridge/jetski-hub-bridge.service)）运行，自动发现当前 `jetski-hub-server` 的 HTTPS 端口（兼容 `*:port` 与 `127.0.0.1:port`）及 CSRF Token（支持从命令行参数或 `:5387` HTML 的 `window.__APP_CONFIG__` 自动提取）；
    - 将所有 `/exa.language_server_pb.LanguageServerService/*` 请求头中的 `x-codeium-csrf-token` 替换为 Hub Token，并以 `FlushInterval: -1` 零缓冲转发 HTTP/2 流（包括 `StreamAgentStateUpdates` 实时流与 `SendUserCascadeMessage` 消息发送/排队）；
    - 拦截 `/Exit` 请求直接返回 `200 OK`，保护常驻的 `jetski-hub-server` 不被关闭。
-4. **`ReconnectExtensionServer` 拦截与侧边栏实时推送**：
-   - 拦截 `extension.js` 发来的 `ReconnectExtensionServer` 请求，记录最新的 `extensionServerPort` 与 `extensionServerCsrfToken`，每 2 秒自动将 `conversation_summaries.db` 中的最新摘要通过 `ExtensionServerService/PushUnifiedStateSyncUpdate` 推送给 App 侧边栏。
+4. **`ReconnectExtensionServer` 直接应答与侧边栏实时推送**：
+   - 由于 `jetski-hub-server` 运行在 `--mode hub` 下未配置 `ExtensionServerClient`（若直接转发会报错 `extension server client not configured`），`jetski_hub_bridge` 直接拦截 `extension.js` 发来的 `/ReconnectExtensionServer` 请求并返回 `200 OK {}`；
+   - 同时从请求体中解析最新的 `extensionServerPort` 与 `extensionServerCsrfToken`，每 2 秒自动将 `conversation_summaries.db` 中的最新摘要通过 `ExtensionServerService/PushUnifiedStateSyncUpdate` 推送给 App 侧边栏。
 
 ---
 
@@ -94,3 +96,4 @@ CREATE TABLE `steps` (
 - ✅ **真·实时流同步（0ms 延迟）**：在 App 中发起任务，打开 Web 看到的就是正在实时滚动输出的同一个 `RUNNING` 会话（反之亦然）；
 - ✅ **跨端统一消息排队（`QueuedSteps`）**：当任务在 App 中处于 `RUNNING` 时，在 Web 端输入下一轮指令，会自动进入同一个 `CascadeManager` 的下一轮排队队列，等当前轮次结束后无缝接续执行；
 - ✅ **100% 杜绝 SQLite 写冲突**：全局只有唯一的 `jetski-hub-server` 进程向 `conversations/<cid>.db` 递增写入 `steps(idx)`，彻底消除脑裂覆盖。
+

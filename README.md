@@ -135,8 +135,8 @@ sequenceDiagram
 ```bash
 ./scripts/install.sh --mode bridge
 ```
-- 自动从本机 `$HOME/.jetski-server/bin/` 提取本地 TLS 证书与私钥（**绝不硬编码入库**），编译 `jetski_hub_bridge`；
-- 调用 `enable_unified_bridge.py --enable`：自动检测并等待当前 SSH 端正在运行的任务变为 `IDLE`，随后写入 `$HOME/.jetski-server/data/Machine/settings.json`（`antigravity.persistentLanguageServer: true`）与 discovery 文件，让 SSH 客户端在 1 秒内热切换至 `jetski-hub-server` 单脑进程。
+- 自动从本机 `$HOME/.jetski-server/bin/` 提取本地 TLS 证书与私钥（**绝不硬编码入库**），编译 `jetski_hub_bridge` 并启动 `systemd --user` 常驻服务 `jetski-hub-bridge.service`（监听 `127.0.0.1:37999`）；
+- 调用 `enable_unified_bridge.py --enable`：自动检测并等待当前 SSH 端正在运行的任务变为 `IDLE`，随后写入 `$HOME/.jetski-server/data/Machine/settings.json`（开启 `antigravity.persistentLanguageServer: true` 并配置 `jetski_ls_shim.py`）与 `~/.gemini/jetski/daemon/ls_<hash>.json` discovery 文件，让 SSH 客户端在 1 秒内无感热切换至 `jetski-hub-server` 单脑进程（无需 Reload Window）。
 
 ### 查看状态或一键回滚原生模式
 ```bash
