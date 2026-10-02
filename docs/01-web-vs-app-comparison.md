@@ -1,5 +1,9 @@
 # 专题一：Jetski Web (Hub) vs. Jetski App (SSH) 八大维度全景对比与双端互补工作流
 
+**[🇨🇳 简体中文](./01-web-vs-app-comparison.md) | [🌐 English](./en/01-web-vs-app-comparison.md) | [🏠 首页 (README)](../README.md)**
+
+---
+
 ## 1. 产品定位演进
 
 - **🌐 Jetski Web (`go/jetski-hub`, `--subclient_type=hub`)**  

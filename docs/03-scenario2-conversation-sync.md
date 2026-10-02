@@ -1,5 +1,9 @@
 # 专题三（场景 2）：同一 Project / Workspace 下不同 Conversation 的跨端双向同步
 
+**[🇨🇳 简体中文](./03-scenario2-conversation-sync.md) | [🌐 English](./en/03-scenario2-conversation-sync.md) | [🏠 首页 (README)](../README.md)**
+
+---
+
 ## 1. 场景定义与痛点表象
 
 在同一个 Project / Workspace（例如 `my-project`）下：

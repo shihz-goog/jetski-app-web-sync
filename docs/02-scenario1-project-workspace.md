@@ -1,5 +1,9 @@
 # 专题二（场景 1）：App (SSH) 与 Web 之间的 Project / Workspace 同步原理与深度调研
 
+**[🇨🇳 简体中文](./02-scenario1-project-workspace.md) | [🌐 English](./en/02-scenario1-project-workspace.md) | [🏠 首页 (README)](../README.md)**
+
+---
+
 ### 🇨🇳 中文版架构图 (Chinese Edition)
 ![Scenario 1 Architecture (ZH)](assets/scenario1_project_workspace_sync_zh.jpg)
 

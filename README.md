@@ -1,4 +1,10 @@
-# Jetski App (SSH) ↔ Jetski Web (Hub) 全景同步指南与三层解决方案
+<div align="center">
+
+# Jetski App (SSH) ↔ Jetski Web (Hub)的全景同步指南与三层解决方案
+
+**[🇨🇳 简体中文](./README.md) | [🌐 English](./README_EN.md)**
+
+</div>
 
 > **面向 Google Cloudtop / 远端工作站开发者的双端无缝协同工程指南**  
 > 彻底打通 **Jetski App (Remote-SSH IDE)** 与 **Jetski Web (Hub Browser)** 之间的：  
@@ -24,32 +30,22 @@
 
 ---
 
-## 🖼️ 二、三大场景架构流程图（中英文双版本共存 · Nano Banana 绘制）
+## 🖼️ 二、三大场景架构流程图（Nano Banana 绘制）
+
+> 💡 英文版架构图请切换至 **[🌐 English README](./README_EN.md)** 查看，或直接访问 [`docs/assets/`](docs/assets/) 目录。
 
 ### 1. 场景一：Project 与 Workspace 跨端映射与 Protobuf Field 18 自动缝合架构
-#### 🇨🇳 中文版 (Chinese Edition)
 ![Scenario 1: Project & Workspace Sync (ZH)](docs/assets/scenario1_project_workspace_sync_zh.jpg)
-
-#### 🌐 英文版 (English Edition)
-![Scenario 1: Project & Workspace Sync (EN)](docs/assets/scenario1_project_workspace_sync_en.jpg)
 
 ---
 
 ### 2. 原生默认双进程架构：为什么同一会话会出现脑裂割裂（Split-Brain）与 SQLite 写覆盖？
-#### 🇨🇳 中文版 (Chinese Edition)
 ![Native Dual-Brain Split Architecture (ZH)](docs/assets/scenario2_3_dual_brain_split_zh.jpg)
-
-#### 🌐 英文版 (English Edition)
-![Native Dual-Brain Split Architecture (EN)](docs/assets/scenario2_3_dual_brain_split_en.jpg)
 
 ---
 
 ### 3. 场景三：`jetski_hub_bridge` 单脑桥接架构 —— 接管 SSH 客户端实现毫秒级实时流与统一排队
-#### 🇨🇳 中文版 (Chinese Edition)
 ![Scenario 3: Unified Single-Brain Bridge (ZH)](docs/assets/scenario3_single_brain_bridge_zh.jpg)
-
-#### 🌐 英文版 (English Edition)
-![Scenario 3: Unified Single-Brain Bridge (EN)](docs/assets/scenario3_single_brain_bridge_en.jpg)
 
 ---
 
@@ -122,14 +118,14 @@ sequenceDiagram
 
 ## 📚 四、深度专题文档导航
 
-1. 📄 **[`docs/01-web-vs-app-comparison.md`](docs/01-web-vs-app-comparison.md)**  
+1. 📄 **[`docs/01-web-vs-app-comparison.md`](docs/01-web-vs-app-comparison.md)** ([English](docs/en/01-web-vs-app-comparison.md))  
    **Jetski Web (Hub) vs. Jetski App (SSH) 八大维度全景对比与双端互补最佳实践**
-2. 📄 **[`docs/02-scenario1-project-workspace.md`](docs/02-scenario1-project-workspace.md)**  
+2. 📄 **[`docs/02-scenario1-project-workspace.md`](docs/02-scenario1-project-workspace.md)** ([English](docs/en/02-scenario1-project-workspace.md))  
    **场景一深度调研与方案：App 与 Web 之间的 Project / Workspace 数据结构、源码机制与自动缝合**  
    *(含 `~/.gemini/config/projects/*.json` 结构、`StandaloneProjectID = "outside-of-project"` 成因、`projects_migration.go` 局限性及双向自动建项机制)*
-3. 📄 **[`docs/03-scenario2-conversation-sync.md`](docs/03-scenario2-conversation-sync.md)**  
+3. 📄 **[`docs/03-scenario2-conversation-sync.md`](docs/03-scenario2-conversation-sync.md)** ([English](docs/en/03-scenario2-conversation-sync.md))  
    **场景二深度解析与方案：同一 Project 下不同 Conversation 的 8 秒级无感双向同步 (`LoadTrajectory`)**
-4. 📄 **[`docs/04-scenario3-single-brain-bridge.md`](docs/04-scenario3-single-brain-bridge.md)**  
+4. 📄 **[`docs/04-scenario3-single-brain-bridge.md`](docs/04-scenario3-single-brain-bridge.md)** ([English](docs/en/04-scenario3-single-brain-bridge.md))  
    **场景三深度解析与方案：同一 Conversation 内多轮对话、实时流 (`RUNNING`) 与消息排队的 `jetski_hub_bridge` 单脑接管方案**
 
 ---

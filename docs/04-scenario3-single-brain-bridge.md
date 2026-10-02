@@ -1,5 +1,9 @@
 # 专题四（场景 3）：同一项目、同一 Conversation 内多轮对话与正在执行任务（`RUNNING` + 消息排队）的单脑实时同步
 
+**[🇨🇳 简体中文](./04-scenario3-single-brain-bridge.md) | [🌐 English](./en/04-scenario3-single-brain-bridge.md) | [🏠 首页 (README)](../README.md)**
+
+---
+
 ## 1. 场景定义与三大致命割裂现象
 
 当你在同一个项目（如 `my-project`）的**同一个会话 (`conversation_id`)** 中交替使用 **Jetski App (SSH)** 与 **Jetski Web** 时，会出现以下三个严重问题：
