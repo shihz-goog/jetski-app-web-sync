@@ -1,0 +1,12 @@
+[Unit]
+Description=Jetski App (SSH) to Web (Hub) Single-Brain HTTP/2 Bridge (Scenario 3)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.gemini/jetski/bin/jetski_hub_bridge --https_port 37999 --http_port 37998 --lsp_port 37997
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

@@ -52,12 +52,16 @@ if [[ "${MODE}" == "bridge" ]]; then
   echo "[2/3] Building & Installing Scenario 3 Single-Brain HTTP/2 Bridge..."
   cp "${REPO_ROOT}/src/scenario3_bridge/extract_local_cert.py" "${JETSKI_BIN_DIR}/extract_local_cert.py"
   cp "${REPO_ROOT}/src/scenario3_bridge/jetski_hub_bridge.go" "${JETSKI_BIN_DIR}/jetski_hub_bridge.go"
+  cp "${REPO_ROOT}/src/scenario3_bridge/jetski_ls_shim.py" "${JETSKI_BIN_DIR}/jetski_ls_shim.py"
   cp "${REPO_ROOT}/src/scenario3_bridge/enable_unified_bridge.py" "${JETSKI_BIN_DIR}/enable_unified_bridge.py"
-  chmod +x "${JETSKI_BIN_DIR}/extract_local_cert.py" "${JETSKI_BIN_DIR}/enable_unified_bridge.py"
+  cp "${REPO_ROOT}/src/scenario3_bridge/jetski-hub-bridge.service" "${SYSTEMD_USER_DIR}/jetski-hub-bridge.service"
+  chmod +x "${JETSKI_BIN_DIR}/extract_local_cert.py" "${JETSKI_BIN_DIR}/jetski_ls_shim.py" "${JETSKI_BIN_DIR}/enable_unified_bridge.py"
 
   python3 "${JETSKI_BIN_DIR}/extract_local_cert.py"
   go build -o "${JETSKI_BIN_DIR}/jetski_hub_bridge" "${JETSKI_BIN_DIR}/jetski_hub_bridge.go"
-  python3 "${JETSKI_BIN_DIR}/enable_unified_bridge.py"
+  systemctl --user daemon-reload
+  systemctl --user enable jetski-hub-bridge.service
+  python3 "${JETSKI_BIN_DIR}/enable_unified_bridge.py" --enable
 else
   echo "[2/3] Skipping Scenario 3 Single-Brain Bridge (--mode daemon)."
 fi

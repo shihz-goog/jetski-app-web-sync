@@ -14,7 +14,9 @@ echo "[1/3] Stopping Scenario 1 & 2 Sync Daemon..."
 systemctl --user disable --now jetski-conv-sync.service 2>/dev/null || true
 
 echo "[2/3] Stopping Scenario 3 Single-Brain Bridge and cleaning discovery files..."
+systemctl --user disable --now jetski-hub-bridge.service 2>/dev/null || true
 pkill -f "${JETSKI_BIN_DIR}/jetski_hub_bridge" 2>/dev/null || true
+pkill -f "${JETSKI_BIN_DIR}/jetski_ls_shim.py" 2>/dev/null || true
 rm -f "${DAEMON_DIR}"/ls_*.json 2>/dev/null || true
 
 echo "[3/3] Restoring VS Code Remote settings..."
@@ -29,10 +31,11 @@ for settings_path in [
     if settings_path.exists():
         try:
             data = json.loads(settings_path.read_text())
-            if "antigravity.persistentLanguageServer" in data:
-                data["antigravity.persistentLanguageServer"] = False
-                settings_path.write_text(json.dumps(data, indent=2) + "\n")
-                print(f"  -> Disabled antigravity.persistentLanguageServer in {settings_path}")
+            data["antigravity.persistentLanguageServer"] = False
+            data.pop("codeiumDev.languageServerBinaryPath", None)
+            data.pop("codeiumDev.languageServerEnv", None)
+            settings_path.write_text(json.dumps(data, indent=2) + "\n")
+            print(f"  -> Restored default LS settings in {settings_path}")
         except Exception as e:
             print(f"  -> Warning: failed to update {settings_path}: {e}")
 PY

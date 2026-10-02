@@ -127,13 +127,11 @@ def discover_servers():
 
     pid_ports = {}
     for line in ss_out.splitlines():
-        if "127.0.0.1:" not in line:
-            continue
-        m_port = re.search(r"127\.0\.0\.1:(\d+)", line)
+        m_port = re.search(r"(?:127\.0\.0\.1|\*):(\d+)", line)
         m_pids = re.findall(r"pid=(\d+)", line)
         if m_port and m_pids:
             port = int(m_port.group(1))
-            if port in (8080, 5387, 37998, 37999):
+            if port in (8080, 5387, 37997, 37998, 37999):
                 continue
             for pid in m_pids:
                 pid_ports.setdefault(pid, []).append(port)
@@ -159,7 +157,15 @@ def discover_servers():
             continue
 
     fallback_hub_csrf = None
-    if os.path.exists("/tmp/jetski_hub_server.ERR"):
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:5387/", timeout=1.5) as resp:
+            html = resp.read().decode("utf-8", "ignore")
+            m_cfg = re.search(r'"csrfToken"\s*:\s*"([0-9a-fA-F-]+)"', html)
+            if m_cfg:
+                fallback_hub_csrf = m_cfg.group(1)
+    except Exception:
+        pass
+    if not fallback_hub_csrf and os.path.exists("/tmp/jetski_hub_server.ERR"):
         try:
             with open("/tmp/jetski_hub_server.ERR", "r", errors="ignore") as f:
                 matches = re.findall(r"CSRFToken:\s*([0-9a-fA-F-]+)", f.read())

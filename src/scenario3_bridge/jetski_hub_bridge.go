@@ -34,26 +34,33 @@ var hub = &HubTarget{}
 
 func discoverHub() (int, int, string) {
 	pyDiscover := `
-import glob, json, os, re, subprocess
+import glob, json, os, re, subprocess, urllib.request
 try:
     ss_out = subprocess.check_output(["ss", "-tlnp"], text=True, stderr=subprocess.DEVNULL)
 except Exception:
     ss_out = ""
 pid_ports = {}
 for line in ss_out.splitlines():
-    if "127.0.0.1:" not in line:
-        continue
-    m_port = re.search(r"127\.0\.0\.1:(\d+)", line)
+    m_port = re.search(r"(?:127\.0\.0\.1|\*):(\d+)", line)
     m_pids = re.findall(r"pid=(\d+)", line)
     if m_port and m_pids:
         port = int(m_port.group(1))
-        if port in (8080, 5387, 37998, 37999):
+        if port in (8080, 5387, 37997, 37998, 37999):
             continue
         for pid in m_pids:
             pid_ports.setdefault(pid, []).append(port)
 
 csrf = ""
-if os.path.exists("/tmp/jetski_hub_server.ERR"):
+try:
+    with urllib.request.urlopen("http://127.0.0.1:5387/", timeout=1.5) as resp:
+        html = resp.read().decode("utf-8", "ignore")
+        m_cfg = re.search(r'"csrfToken"\s*:\s*"([0-9a-fA-F-]+)"', html)
+        if m_cfg:
+            csrf = m_cfg.group(1)
+except Exception:
+    pass
+
+if not csrf and os.path.exists("/tmp/jetski_hub_server.ERR"):
     try:
         with open("/tmp/jetski_hub_server.ERR", "r", errors="ignore") as f:
             m = re.findall(r"CSRFToken:\s*([0-9a-fA-F-]+)", f.read())
@@ -61,25 +68,6 @@ if os.path.exists("/tmp/jetski_hub_server.ERR"):
                 csrf = m[-1]
     except Exception:
         pass
-
-env_ls_csrf = {}
-for env_path in glob.glob("/proc/[0-9]*/environ"):
-    try:
-        if os.stat(env_path).st_uid != os.getuid():
-            continue
-        with open(env_path, "rb") as f:
-            raw = f.read().split(b"\x00")
-        ls_addr, tok = None, None
-        for item in raw:
-            if item.startswith(b"ANTIGRAVITY_LS_ADDRESS="):
-                ls_addr = item.split(b"=", 1)[1].decode("utf-8", "ignore")
-            elif item.startswith(b"ANTIGRAVITY_CSRF_TOKEN="):
-                tok = item.split(b"=", 1)[1].decode("utf-8", "ignore")
-        if tok and ls_addr and ":" in ls_addr:
-            p = int(ls_addr.rsplit(":", 1)[1])
-            env_ls_csrf[p] = tok
-    except Exception:
-        continue
 
 res = {}
 for pid, ports in pid_ports.items():
@@ -89,10 +77,6 @@ for pid, ports in pid_ports.items():
         with open(f"/proc/{pid}/cmdline", "rb") as f:
             cmd = f.read().replace(b"\x00", b" ").decode("utf-8", "ignore")
         if "jetski-hub-server" in cmd:
-            for p in ports:
-                if p in env_ls_csrf:
-                    csrf = env_ls_csrf[p]
-                    break
             res = {"ports": sorted(set(ports)), "csrf": csrf}
             break
     except Exception:
@@ -282,11 +266,30 @@ func main() {
 
 	httpsPortFlag := flag.Int("https_port", 37999, "Bridge HTTPS port")
 	httpPortFlag := flag.Int("http_port", 37998, "Bridge HTTP port")
+	lspPortFlag := flag.Int("lsp_port", 37997, "Bridge LSP TCP port")
 	certFile := flag.String("cert", filepath.Join(defaultBinDir, "ls_bridge_cert.pem"), "TLS cert path")
 	keyFile := flag.String("key", filepath.Join(defaultBinDir, "ls_bridge_key.pem"), "TLS key path")
 	extPortFlag := flag.Int("extension_server_port", 0, "Initial ExtensionServer port")
 	extTokenFlag := flag.String("extension_server_csrf_token", "", "Initial ExtensionServer token")
 	flag.Parse()
+
+	go func() {
+		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *lspPortFlag))
+		if err != nil {
+			log.Printf("LSP stub listen warning: %v", err)
+			return
+		}
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				continue
+			}
+			go func(c net.Conn) {
+				defer c.Close()
+				_, _ = io.Copy(io.Discard, c)
+			}(conn)
+		}
+	}()
 
 	hp, htp, tok := discoverHub()
 	hub.httpsPort = hp
@@ -297,9 +300,62 @@ func main() {
 
 	go refreshHubLoop()
 	go pushSummariesLoop(defaultSumDB)
+	go func() {
+		pyMaintain := fmt.Sprintf(`
+import glob, hashlib, json, os, re
+home = os.path.expanduser("~")
+daemon_dir = os.path.join(home, ".gemini", "jetski", "daemon")
+os.makedirs(daemon_dir, exist_ok=True)
+bin_dirs = sorted(glob.glob(os.path.join(home, ".jetski-server", "bin", "*")))
+ide_ver = os.path.basename(bin_dirs[-1]).split("-")[0] if bin_dirs else ""
+workspaces = set()
+for pfile in glob.glob(os.path.join(home, ".gemini", "config", "projects", "*.json")):
+    try:
+        pdata = json.load(open(pfile))
+        for ws in pdata.get("workspaces", []):
+            p = ws.get("path", "").rstrip("/")
+            if p:
+                uri = p if p.startswith("file://") else f"file://{p}"
+                workspaces.add(re.sub(r"[^a-zA-Z0-9]+", "_", uri).strip("_"))
+    except Exception:
+        pass
+for git_dir in glob.glob(os.path.join(home, "git", "*")):
+    if os.path.isdir(git_dir):
+        uri = f"file://{git_dir.rstrip('/')}"
+        workspaces.add(re.sub(r"[^a-zA-Z0-9]+", "_", uri).strip("_"))
+disc_data = {
+    "pid": %d,
+    "httpsPort": %d,
+    "httpPort": %d,
+    "lspPort": %d,
+    "csrfToken": "jetski-unified-bridge-token",
+    "lsVersion": ide_ver,
+}
+for ws_id in workspaces:
+    h = hashlib.sha256(ws_id.encode()).hexdigest()[:16]
+    f = os.path.join(daemon_dir, f"ls_{h}.json")
+    need_write = True
+    if os.path.exists(f):
+        try:
+            cur = json.load(open(f))
+            cpid = int(cur.get("pid", 0))
+            if cpid > 0 and cur.get("lsVersion") == ide_ver:
+                os.kill(cpid, 0)
+                need_write = False
+        except Exception:
+            need_write = True
+    if need_write:
+        with open(f, "w") as fp:
+            json.dump(disc_data, fp, indent=2)
+`, os.Getpid(), *httpsPortFlag, *httpPortFlag, *lspPortFlag)
+		for {
+			_ = exec.Command("python3", "-c", pyMaintain).Run()
+			time.Sleep(1 * time.Second)
+		}
+	}()
 
 	transport := &http.Transport{
-		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true, NextProtos: []string{"h2", "http/1.1"}},
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 		ForceAttemptHTTP2: true,
 	}
 
@@ -311,7 +367,6 @@ func main() {
 		}
 		if strings.HasSuffix(r.URL.Path, "/ReconnectExtensionServer") {
 			body, _ := io.ReadAll(r.Body)
-			r.Body = io.NopCloser(bytes.NewReader(body))
 			ep, et := parseReconnectProto(body)
 			if ep > 0 {
 				hub.mu.Lock()
@@ -320,6 +375,13 @@ func main() {
 				hub.mu.Unlock()
 				log.Printf("Updated ExtensionServer to port=%d", ep)
 			}
+			ct := r.Header.Get("Content-Type")
+			w.Header().Set("Content-Type", ct)
+			w.WriteHeader(http.StatusOK)
+			if strings.Contains(ct, "json") {
+				_, _ = w.Write([]byte("{}"))
+			}
+			return
 		}
 		hub.mu.RLock()
 		targetPort := hub.httpsPort
