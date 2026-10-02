@@ -24,20 +24,32 @@
 
 ---
 
-## 🖼️ 二、三大场景架构流程图（Nano Banana 绘制）
+## 🖼️ 二、三大场景架构流程图（中英文双版本共存 · Nano Banana 绘制）
 
 ### 1. 场景一：Project 与 Workspace 跨端映射与 Protobuf Field 18 自动缝合架构
-![Scenario 1: Project & Workspace Sync](docs/assets/scenario1_project_workspace_sync.jpg)
+#### 🇨🇳 中文版 (Chinese Edition)
+![Scenario 1: Project & Workspace Sync (ZH)](docs/assets/scenario1_project_workspace_sync_zh.jpg)
+
+#### 🌐 英文版 (English Edition)
+![Scenario 1: Project & Workspace Sync (EN)](docs/assets/scenario1_project_workspace_sync_en.jpg)
 
 ---
 
 ### 2. 原生默认双进程架构：为什么同一会话会出现脑裂割裂（Split-Brain）与 SQLite 写覆盖？
-![Native Dual-Brain Split Architecture](docs/assets/scenario2_3_dual_brain_split.jpg)
+#### 🇨🇳 中文版 (Chinese Edition)
+![Native Dual-Brain Split Architecture (ZH)](docs/assets/scenario2_3_dual_brain_split_zh.jpg)
+
+#### 🌐 英文版 (English Edition)
+![Native Dual-Brain Split Architecture (EN)](docs/assets/scenario2_3_dual_brain_split_en.jpg)
 
 ---
 
 ### 3. 场景三：`jetski_hub_bridge` 单脑桥接架构 —— 接管 SSH 客户端实现毫秒级实时流与统一排队
-![Scenario 3: Unified Single-Brain Bridge](docs/assets/scenario3_single_brain_bridge.jpg)
+#### 🇨🇳 中文版 (Chinese Edition)
+![Scenario 3: Unified Single-Brain Bridge (ZH)](docs/assets/scenario3_single_brain_bridge_zh.jpg)
+
+#### 🌐 英文版 (English Edition)
+![Scenario 3: Unified Single-Brain Bridge (EN)](docs/assets/scenario3_single_brain_bridge_en.jpg)
 
 ---
 

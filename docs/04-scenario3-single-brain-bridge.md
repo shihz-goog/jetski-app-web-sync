@@ -12,7 +12,11 @@
 
 ## 2. 源码级根因铁证
 
-![Native Split-Brain Architecture](assets/scenario2_3_dual_brain_split.jpg)
+#### 🇨🇳 中文版架构图 (Chinese Edition)
+![Native Split-Brain Architecture (ZH)](assets/scenario2_3_dual_brain_split_zh.jpg)
+
+#### 🌐 英文版架构图 (English Edition)
+![Native Split-Brain Architecture (EN)](assets/scenario2_3_dual_brain_split_en.jpg)
 
 ### 根因 1：`cascade_manager.go:1454` 的 `checkAlreadyLoaded` 硬编码拦截
 在 `third_party/jetski/cortex/cascade_manager.go` 的 `LoadTrajectory` 实现中，第一行就是内存去重检查：
@@ -46,7 +50,11 @@ CREATE TABLE `steps` (
 
 ## 3. 终极解决方案：`jetski_hub_bridge` 单脑透明桥接器（Unified Single-Brain Bridge）
 
-![Unified Single-Brain Bridge Architecture](assets/scenario3_single_brain_bridge.jpg)
+#### 🇨🇳 中文版架构图 (Chinese Edition)
+![Unified Single-Brain Bridge Architecture (ZH)](assets/scenario3_single_brain_bridge_zh.jpg)
+
+#### 🌐 英文版架构图 (English Edition)
+![Unified Single-Brain Bridge Architecture (EN)](assets/scenario3_single_brain_bridge_en.jpg)
 
 既然 **Jetski App (SSH)** 的远程插件宿主（`extension.js`）和 **Jetski Web** 的 `jetski-hub-server` 本来就运行在**同一台 Cloudtop** 上，且两者都实现了完全相同的 320 个 `exa.language_server_pb.LanguageServerService` RPC 接口，那么解决同一会话实时同步的唯一正确方式就是：**消除第二个大脑，让 Jetski App (SSH) 直接连入 `jetski-hub-server`！**
 
