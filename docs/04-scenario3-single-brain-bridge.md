@@ -2,7 +2,7 @@
 
 ## 1. 场景定义与三大致命割裂现象
 
-当你在同一个项目（如 `ce-workbench`）的**同一个会话 (`conversation_id`)** 中交替使用 **Jetski App (SSH)** 与 **Jetski Web** 时，会出现以下三个严重问题：
+当你在同一个项目（如 `my-project`）的**同一个会话 (`conversation_id`)** 中交替使用 **Jetski App (SSH)** 与 **Jetski Web** 时，会出现以下三个严重问题：
 
 1. **多轮对话不再同步**：某条会话在 Web 和 App 两端都点开过之后，你在 App 里继续聊了 10 轮（例如从第 640 步跑到第 1169 步），切回 Web 页面刷新，Web 端永远卡在第 640 步，哪怕重启 `jetski_conv_sync_daemon.py` 也无效；
 2. **正在执行的任务状态 (`RUNNING`) 与流式输出不可见**：你在 App 里发起了一个长耗时任务（显示 `CASCADE_RUN_STATUS_RUNNING`，正在实时流式输出工具调用与思考过程），切到 Web 打开同一个会话，状态却显示为 `IDLE`，完全看不到正在执行的进度；

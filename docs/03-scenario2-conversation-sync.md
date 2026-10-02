@@ -2,9 +2,9 @@
 
 ## 1. 场景定义与痛点表象
 
-在同一个 Project / Workspace（例如 `ce-workbench`）下：
-- 你在 **Jetski App (SSH)** 里新建了 **Conversation A**，聊完后打开浏览器 **Jetski Web** 进入 `ce-workbench` 项目，列表里却没有 Conversation A；
-- 反过来，你在 **Jetski Web** 的 `ce-workbench` 项目下新建了 **Conversation B**，回到 **Jetski App (SSH)** 的会话历史下拉框中，也找不到 Conversation B。
+在同一个 Project / Workspace（例如 `my-project`）下：
+- 你在 **Jetski App (SSH)** 里新建了 **Conversation A**，聊完后打开浏览器 **Jetski Web** 进入 `my-project` 项目，列表里却没有 Conversation A；
+- 反过来，你在 **Jetski Web** 的 `my-project` 项目下新建了 **Conversation B**，回到 **Jetski App (SSH)** 的会话历史下拉框中，也找不到 Conversation B。
 
 ---
 
@@ -55,7 +55,7 @@ x-codeium-csrf-token: <process_csrf_token>
 2. **过滤 Subagent 子会话**：
    - 解析 `trajectory_metadata_blob` 的 Protobuf 字段，自动跳过带有 Field 5 或 Field 8（Subagent 父子引用）的内部子代理轨迹，避免污染主会话列表。
 3. **最长前缀匹配绑定 `project_id`**：
-   - 当存在嵌套路径项目（例如既有 `/home/user/git` 项目，又有 `/home/user/git/ce-workbench` 项目）时，按 `workspace_uri` 路径长度降序匹配**最精确的子目录 Project**，避免子项目会话被误挂到父目录项目下。
+   - 当存在嵌套路径项目（例如既有 `/home/user/git` 项目，又有 `/home/user/git/my-project` 项目）时，按 `workspace_uri` 路径长度降序匹配**最精确的子目录 Project**，避免子项目会话被误挂到父目录项目下。
 4. **按需增量触发 `LoadTrajectory`**：
    - 对 Web 端：当检测到新会话、`project_id` 被修正、或磁盘 `step_count` 大于 `conversation_summaries.db` 记录值时，向 `jetski-hub-server` 调用 `LoadTrajectory`；
    - 对 App 端：当检测到匹配当前 `--workspace_id` 的会话未推送或步数变化时，向对应的 `language_server_linux_x64` 调用 `LoadTrajectory`。

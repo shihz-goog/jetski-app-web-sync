@@ -28,12 +28,12 @@
 ```json
 {
   "id": "8312b1c8-4490-4949-a85f-256d3b4e0b99",
-  "name": "ce-workbench",
+  "name": "my-project",
   "projectResources": {
     "resources": [
       {
         "gitFolder": {
-          "folderUri": "file:///usr/local/google/home/<user>/git/ce-workbench",
+          "folderUri": "file:///usr/local/google/home/<user>/git/my-project",
           "allowWrite": true
         }
       }
@@ -57,7 +57,7 @@
    ```sql
    SELECT project_id, count(*) FROM conversation_summaries GROUP BY project_id;
    -- 667b9044-f221-4b1a-8f43-5c7ec6314d24 (video_editor)       : 1
-   -- 8312b1c8-4490-4949-a85f-256d3b4e0b99 (ce-workbench)       : 13
+   -- 8312b1c8-4490-4949-a85f-256d3b4e0b99 (my-project)       : 13
    -- 8aa03094-cbc9-40b6-8e22-df47beb4c44f (autel-gpu-...)      : 5
    -- 94cc6dd1-1904-4045-ae16-f4feb111fda9 ($HOME)              : 20
    -- e4a36b21-3fed-4b9c-8807-02028ace2bce (git)                : 7
@@ -85,7 +85,7 @@ settings_store.go:271] ApplySettingsToConfig result: projectID="" permissionsV2=
 2. **`projectID` 恒为空字符串 `""`**：在 IDE 模式下，`settings_store.go:271` 中的 `projectID` 始终为 `""`，既不会读取也不会创建 `~/.gemini/config/projects/*.json`；
 3. **会话 `.db` 仅写 Protobuf Field 7，不写 Field 18**：
    在每个会话数据库 `~/.gemini/jetski/conversations/<cid>.db` 的 `trajectory_metadata_blob` 表（存储 `CortexTrajectoryMetadata` Protobuf 二进制）中：
-   - **Field 7 (`workspace_uris`)**：记录工作区路径（如 `file:///.../git/ce-workbench`）；
+   - **Field 7 (`workspace_uris`)**：记录工作区路径（如 `file:///.../git/my-project`）；
    - **Field 18 (`project_id`)**：Web 端用来归属 Project 的核心字段（Wire tag `0x92 0x01`，长度 `0x24` 即 36 字节 UUID）。**App (SSH) 创建的会话中 Field 18 永远缺失！**
 
 ---
